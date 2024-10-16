@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Goal Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .progress {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            height: 30px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            transition: width 0.4s ease;
+        }
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+        table {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .summary {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Investment Goal Tracker</h1>
+    <label for="initialAmount">Initial Amount ($):</label>
+    <input type="number" id="initialAmount" placeholder="Enter initial amount" required>
+
+    <label for="targetAmount">Target Amount ($):</label>
+    <input type="number" id="targetAmount" placeholder="Enter target amount" required>
+
+    <label for="futureDate">Future Date:</label>
+    <input type="date" id="futureDate" required>
+
+    <button id="calculate">Calculate</button>
+
+    <div class="progress" id="progressContainer">
+        <div class="progress-bar" id="progressBar" style="width: 0%;">0%</div>
+    </div>
+
+    <div class="summary" id="summary"></div>
+
+    <div class="result" id="result"></div>
+
+    <script>
+        // Function to format numbers with commas
+        function formatNumber(num) {
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Function to set progress bar color based on percentage
+        function setProgressBarColor(progressPercentage) {
+            const progressBar = document.getElementById("progressBar");
+
+            if (progressPercentage < 25) {
+                progressBar.style.backgroundColor = "#ff4c4c"; // Red (0-25%)
+            } else if (progressPercentage < 50) {
+                progressBar.style.backgroundColor = "#ff914d"; // Orange (25-50%)
+            } else if (progressPercentage < 75) {
+                progressBar.style.backgroundColor = "#ffd966"; // Yellow (50-75%)
+            } else {
+                progressBar.style.backgroundColor = "#4caf50"; // Green (75-100%)
+            }
+        }
+
+        document.getElementById("calculate").addEventListener("click", function() {
+            const initialAmount = parseFloat(document.getElementById("initialAmount").value) || 0;
+            const targetAmount = parseFloat(document.getElementById("targetAmount").value) || 0;
+            const futureDate = new Date(document.getElementById("futureDate").value);
+
+            if (targetAmount <= initialAmount) {
+                alert("Target amount must be greater than initial amount.");
+                return;
+            }
+
+            const today = new Date();
+            const timeDifference = futureDate - today; // Time difference in milliseconds
+
+            // Calculate the number of days, weeks, and months until the target date
+            const daysUntilTarget = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)); // Convert to days
+            const weeksUntilTarget = Math.ceil(daysUntilTarget / 7); // Convert to weeks
+            const monthsUntilTarget = Math.ceil(daysUntilTarget / 30); // Approximate to months
+            const totalToAcquire = targetAmount - initialAmount;
+
+            // Monthly, weekly, and daily savings
+            const monthlySavings = totalToAcquire / monthsUntilTarget; // Average monthly savings
+            const weeklySavings = totalToAcquire / weeksUntilTarget; // Weekly savings
+            const dailySavings = totalToAcquire / daysUntilTarget; // Daily savings
+
+            // Percentage changes
+            const progressPercentage = (initialAmount / targetAmount) * 100;
+            const totalPercentageChange = ((targetAmount - initialAmount) / initialAmount) * 100;
+            const monthlyPercentageChange = totalPercentageChange / monthsUntilTarget; // Correct monthly percentage change
+            const weeklyPercentageChange = totalPercentageChange / weeksUntilTarget; // Weekly percentage change
+            const dailyPercentageChange = totalPercentageChange / daysUntilTarget; // Daily percentage change
+
+            // Update progress bar width and color
+            const progressBar = document.getElementById("progressBar");
+            progressBar.style.width = progressPercentage + "%";
+            progressBar.textContent = Math.round(progressPercentage) + "%";
+            setProgressBarColor(progressPercentage);
+
+            // Update summary section (Amount and percentage needed)
+            const summaryDiv = document.getElementById("summary");
+            summaryDiv.innerHTML = `
+                You need to acquire $${formatNumber(totalToAcquire)} (${totalPercentageChange.toFixed(2)}% increase).
+            `;
+
+            // Update result section with a table format (Time, savings, and percentage changes)
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time Frame</th>
+                            <th>Time Left</th>
+                            <th>Amount to Acquire</th>
+                            <th>Percentage Increase</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Per Month</td>
+                            <td>${monthsUntilTarget} months</td>
+                            <td>$${formatNumber(monthlySavings)}</td>
+                            <td>${monthlyPercentageChange.toFixed(2)}%</td>
+                        </tr>
+                        <tr>
+                            <td>Per Week</td>
+                            <td>${weeksUntilTarget} weeks</td>
+                            <td>$${formatNumber(weeklySavings)}</td>
+                            <td>${weeklyPercentageChange.toFixed(2)}%</td>
+                        </tr>
+                        <tr>
+                            <td>Per Day</td>
+                            <td>${daysUntilTarget} days</td>
+                            <td>$${formatNumber(dailySavings)}</td>
+                            <td>${dailyPercentageChange.toFixed(2)}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        });
+    </script>
+
+</body>
+</html>
